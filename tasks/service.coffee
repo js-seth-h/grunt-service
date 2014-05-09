@@ -2,23 +2,54 @@
 (c) js.seth.h@gmail.com
 MIT License
 ###
+
+
+fs = require 'fs' 
+
+log = undefined
+
+existProcess = (pid)-> 
+  try
+    process.kill pid, 0
+  catch err
+    return false
+  return true
+
+
+kill= (pid)->
+  try
+    process.kill pid
+  catch err
+    log.write "Process(pid=#{pid}) may be not exists." 
+ 
+
 module.exports = ( grunt ) ->
 
   spawn = require('child_process').spawn
-
-  grunt.registerMultiTask 'service', 'background service', (arg1) ->
+  log = grunt.log 
+  grunt.registerMultiTask 'service', 'background service', (arg1 = 'start') ->
     # console.log this
     target = @target
     data = @data
     options = @options
-      failOnError : true
+      failOnError : false
       async : true
       stdio : 'pipe'
-    log = grunt.log
-    # console.log 'opt - ', options 
+    # console.log 'opt - ', arg1
+
+    pid = parseInt(fs.readFileSync data.pidFile) 
+    
+    return kill(pid) if arg1 is 'stop'
+    kill(pid) if arg1 is 'restart' 
+
+    if arg1 is 'start'
+      if existProcess pid
+        log.write "Process(pid=#{pid}) already exists." 
+        return
+
 
     command = data.command  
-    console.log data.command , data.args
+    # console.log data.command , data.args
 
     if data.shellCommand?
       shellCommand = data.shellCommand  
@@ -35,6 +66,7 @@ module.exports = ( grunt ) ->
     # console.log command, args , opt
     # grunt.log.writeln command, args, options, arg1
     proc = spawn command, args , options
+
 
     # console.log 'stdout', proc.stdout
 
