@@ -59,7 +59,7 @@ grunt.loadNpmTasks('grunt-service');
 
   grunt.loadNpmTasks('grunt-spawn');
   grunt.loadNpmTasks('grunt-fast-watch'); 
-  grunt.registerTask('default', ['spawn']);
+  grunt.registerTask('default', ['service:server']);
   
 ```
 
