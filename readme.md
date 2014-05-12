@@ -40,18 +40,25 @@ grunt.loadNpmTasks('grunt-service');
 ## Examples
 
 
-### Support `debug` module
+### Support `debug` module & PID File
 
 ```coffee
 
   grunt.initConfig   
-    spawn: 
+    fastWatch:   
+      mess: 
+        dirs : '.'
+        ignore:  watchTarget.messIgnore
+        tasks: ["service:server:restart"]
+    service: 
       server: 
         shellCommand : 'set DEBUG=* && coffee app.coffee'
+        pidFile : (process.env.TMPDIR || process.env.TEMP) + '/app.pid'  
         options :
           stdio : 'inherit'
 
   grunt.loadNpmTasks('grunt-spawn');
+  grunt.loadNpmTasks('grunt-fast-watch'); 
   grunt.registerTask('default', ['spawn']);
   
 ```
@@ -121,7 +128,7 @@ And some added option are as follows:
 
 ### failOnError
  
-Default: `true`
+Default: `false`
 Type: `Boolean`
 
 If false, exit code of command is ignored.
