@@ -49,7 +49,7 @@ grunt.loadNpmTasks('grunt-service');
       mess: 
         dirs : '.'
         ignore:  watchTarget.messIgnore
-        tasks: ["service:server:restart"]
+        tasks: ["service:server:restart"] # or tasks['service:server:stop']
     service: 
       server: 
         shellCommand : 'set DEBUG=* && coffee app.coffee'
@@ -64,6 +64,10 @@ grunt.loadNpmTasks('grunt-service');
 ```
 
 Run server and show it debug log without changes( inclulde coloring and date).
+
+I make & use [grunt-fast-watch][grunt-fast-watch] instead `grunt-watch` several reason. see also [grunt-fast-watch][grunt-fast-watch].
+
+[grunt-fast-watch]:  https://www.npmjs.org/package/grunt-fast-watch
 
 
 ### Create a folder named `test`.
