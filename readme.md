@@ -11,8 +11,8 @@ But, these plugins remove readability of debug message, and can't kill process i
 
 ## Features
 
-* options pass to childprocess.spawn
-* so, this supports full option of childprocess.spawn include `stdio: ignore`, `stdio: inherit`, `stdio: ['ignore','pipe','pipe']` and `stdio: [0, 1,2 ]`  
+* options pass to `childprocess.spawn`
+* so, this supports full option of `childprocess.spawn` include `stdio: ignore`, `stdio: inherit`, `stdio: ['ignore','pipe','pipe']` and `stdio: [0, 1,2 ]`  
 * kill process by `PID file`
 
 
@@ -40,16 +40,51 @@ grunt.loadNpmTasks('grunt-service');
 ## Examples
 
 
-### Support `debug` module & PID File
+### As a Developement Sever 
+> Support [debug][debug] module & PID File for restart
+[debug]: https://www.npmjs.org/package/debug
 
 ```coffee
+    
+trim = (str)->
+  str.replace /(^\s*)|(\s*$)/gm, ""
+fromLines = (patterns)->
+  return trim(patterns).split('\n').map (pattern)->
+    trim(pattern)
+
+watchDirIgnore = fromLines """ 
+.git
+.gitignore
+tmp
+test
+public
+node_modules 
+""" 
+
+clientMatch = fromLines """
+browser/*.coffee
+module/*/browser/*.coffee
+""" 
+
+serverMatch = fromLines """
+*.coffee
+!browser
+!**/browser/**
+!Gruntfile.coffee 
+"""
+
 
   grunt.initConfig   
     fastWatch:   
-      mess: 
-        dirs : '.'
-        ignore:  watchTarget.messIgnore
-        tasks: ["service:server:restart"] # or tasks['service:server:stop']
+      cwd:
+        dir : '.'
+        ignoreSubDir : watchDirIgnore 
+        trigger:
+          server:  
+            care : serverMatch
+            tasks: ["service:server:restart"]
+          client: 
+            care : clientMatch    
     service: 
       server: 
         shellCommand : 'set DEBUG=* && coffee app.coffee'
@@ -59,11 +94,11 @@ grunt.loadNpmTasks('grunt-service');
 
   grunt.loadNpmTasks('grunt-spawn');
   grunt.loadNpmTasks('grunt-fast-watch'); 
-  grunt.registerTask('default', ['service:server']);
+  grunt.registerTask('default', ['service:server', 'fastWatch:cwd']);
   
 ```
 
-Run server and show it debug log without changes( inclulde coloring and date).
+Run server and show it [debug][debug]  log without changes( inclulde coloring).
 
 I make & use [grunt-fast-watch][grunt-fast-watch] instead `grunt-watch` several reason. see also [grunt-fast-watch][grunt-fast-watch].
 
@@ -121,7 +156,7 @@ grunt.initConfig({
 
 ## options
 	
-options will pass to 1childprocess.spawn` without changes
+options will pass to `childprocess.spawn` without changes
 
 so, please refer [Node.js API Document](http://www.nodejs.org/api/child_process.html#child_process_child_process_spawn_command_args_options)
 
@@ -149,7 +184,28 @@ If false, the next task is to continue without blocking.
 
 ## License
 
-MIT
+(The MIT License)
+
+Copyright (c) 2014 junsik &lt;js@seth.h@google.com&gt;
+
+Permission is hereby granted, free of charge, to any person obtaining
+a copy of this software and associated documentation files (the
+'Software'), to deal in the Software without restriction, including
+without limitation the rights to use, copy, modify, merge, publish,
+distribute, sublicense, and/or sell copies of the Software, and to
+permit persons to whom the Software is furnished to do so, subject to
+the following conditions:
+
+The above copyright notice and this permission notice shall be
+included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 
 [sh]: https://github.com/sindresorhus/grunt-shell 
