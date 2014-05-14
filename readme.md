@@ -85,6 +85,7 @@ serverMatch = fromLines """
             tasks: ["service:server:restart"]
           client: 
             care : clientMatch    
+            tasks: ["service:server:restart"]
     service: 
       server: 
         shellCommand : 'set DEBUG=* && coffee app.coffee'
