@@ -10,8 +10,7 @@ module.exports = (grunt)->
         args: ['<%= testDir %>']
          # shellCommand : 'set DEBUG=* && coffee app.coffee'
         # shellCommand : 'mkdir <%= testDir %>'
-        options :
-          async: false
+        options : 
           failOnError: false
           stdio : 'pipe'
 

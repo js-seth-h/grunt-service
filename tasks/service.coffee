@@ -16,13 +16,13 @@ existProcess = (pid)->
   return true
 
 
-kill= (pid)->
-  return log.write "Pid file not exists" if pid is null
-  try
-    process.kill pid
-  catch err
-    log.write "Process(pid=#{pid}) may be not exists." 
- 
+loopUntil = (fnEndOk, done)->
+  loopId = setInterval ()->
+    if true is fnEndOk()
+      clearInterval loopId
+      done()
+  , 200
+
 
 module.exports = ( grunt ) ->
 
@@ -35,24 +35,50 @@ module.exports = ( grunt ) ->
     data = @data
     options = @options
       failOnError : false
-      async : true
+      # async : true
       stdio : 'pipe'
     # console.log 'opt - ', arg1
 
-    killByPid = ()->
-      return log.write "pid file not exists" unless  fs.existsSync data.pidFile
+    done = @async()
+
+
+    killByPid = (callback)->
+      return log.writeln "[Service] #{target} - pid file not exists" unless  fs.existsSync data.pidFile
       pid = parseInt(fs.readFileSync data.pidFile)
+
+      log.writeln "[Service] #{target}(pid=#{pid}) is killing "
+
       try
         process.kill pid
       catch err
-        log.write "Process(pid=#{pid}) may be not exists." 
+        log.writeln "[Service] #{target}(pid=#{pid}) already exists." 
+        return callback()
 
-    start = ()-> 
-      if fs.existsSync data.pidFile
-        pid = parseInt(fs.readFileSync data.pidFile)
-        if existProcess pid
-          log.write "Process(pid=#{pid}) already exists." 
-          return
+
+      loopUntil ()-> 
+        not existProcess(pid)
+      , ()->
+        log.writeln "[Service] #{target}(pid=#{pid}) is killed." 
+        callback()
+  
+
+      # idKiller = setInterval ()->
+      #   try
+      #     process.kill pid
+      #   catch err
+      #     log.writeln "[Service] #{target}(pid=#{pid}) is killed." 
+      #     clearInterval idKiller
+      #     callback()
+      # , 200
+
+
+    start = (callback)-> 
+      if data.pidFile
+        if fs.existsSync data.pidFile
+          pid = parseInt(fs.readFileSync data.pidFile)
+          if existProcess pid
+            log.writeln "[Service] #{target}(pid=#{pid}) already exists." 
+            return
 
       command = data.command  
       # console.log data.command , data.args
@@ -70,31 +96,45 @@ module.exports = ( grunt ) ->
         args = data.args
 
       # console.log command, args , opt
-      # grunt.log.writeln command, args, options, arg1
+      # grunt.log.writelnln command, args, options, arg1
       proc = spawn command, args , options
 
 
       # console.log 'stdout', proc.stdout
+ 
+      log.writeln "[Service] #{target} is starting."
 
       if proc.stdout
-        proc.stdout.on 'data',  (d)->  log.write(d)
+        proc.stdout.on 'data',  (d)->  log.writeln(d)
       if proc.stderr
-        proc.stderr.on 'data',  (d)->  log.write(d)
+        proc.stderr.on 'data',  (d)->  log.writeln(d)
 
-      if options.async
-        done = self.async()
-        proc.on 'exit', (code)->
-          return done() if not options.failOnError
-          return done() if code is 0 
 
-          done new Error "Finished with error #{code}"
+      if data.pidFile
+        loopUntil ()-> 
+          fs.existsSync data.pidFile
+        , ()->
+          pid = parseInt(fs.readFileSync data.pidFile) 
+          log.writeln "[Service] #{target}(pid=#{pid}) is started." 
+          callback()
+
+
+      # if options.async
+      #   done = self.async()
+      #   proc.on 'exit', (code)->
+      #     return done() if not options.failOnError
+      #     return done() if code is 0 
+
+      #     done new Error "Finished with error #{code}"
   
     switch arg1
       when "stop"
-        killByPid()
-      when "restart"
-        killByPid()
-        start()
+        killByPid ()-> done()
+      when "restart" 
+        killByPid ()-> 
+          start ()->
+            done() 
       when "start"    
-        start()
- 
+        start ()->
+          done() 
+          
