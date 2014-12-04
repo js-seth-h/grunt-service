@@ -117,6 +117,8 @@ module.exports = ( grunt ) ->
           pid = parseInt(fs.readFileSync data.pidFile) 
           log.writeln "[Service] #{target}(pid=#{pid}) is started." 
           callback()
+      else
+        callback()
 
 
       # if options.async
