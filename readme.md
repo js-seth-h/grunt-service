@@ -1,6 +1,6 @@
 # grunt-service
 
-> start/stop/restart service (foreground or background process), supports killiling by pidfile.
+> start/stop/restart service (foreground or background process), supports killing by pidfile.
 
 ## Purpose
 
