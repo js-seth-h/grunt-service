@@ -42,7 +42,13 @@ module.exports = ( grunt ) ->
 
 
     killByPid = (callback)->
-      return log.writeln "[Service] #{target} - pid file not exists" unless  fs.existsSync data.pidFile
+      if !fs.existsSync(data.pidFile)
+        log.writeln "[Service] #{target} - pid file not exists"
+        if data.failOnError
+          return
+        else
+          return callback()
+
       pid = parseInt(fs.readFileSync data.pidFile)
 
       log.writeln "[Service] #{target}(pid=#{pid}) is killing "
@@ -77,7 +83,8 @@ module.exports = ( grunt ) ->
           pid = parseInt(fs.readFileSync data.pidFile)
           if existProcess pid
             log.writeln "[Service] #{target}(pid=#{pid}) already exists." 
-            return
+            return if data.failOnError
+            return killByPid ()-> start(callback)
 
       command = data.command
       # console.log data.command , data.args
