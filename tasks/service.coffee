@@ -37,13 +37,18 @@ module.exports = ( grunt ) ->
       failOnError : false
       # async : true
       stdio : 'pipe'
-    # console.log 'opt - ', arg1
 
     done = @async()
 
 
     killByPid = (callback)->
-      return log.writeln "[Service] #{target} - pid file not exists" unless  fs.existsSync data.pidFile
+      if !fs.existsSync(data.pidFile)
+        log.writeln "[Service] #{target} - pid file not exists"
+        if data.failOnError
+          return
+        else
+          return callback()
+
       pid = parseInt(fs.readFileSync data.pidFile)
 
       log.writeln "[Service] #{target}(pid=#{pid}) is killing "
@@ -78,13 +83,14 @@ module.exports = ( grunt ) ->
           pid = parseInt(fs.readFileSync data.pidFile)
           if existProcess pid
             log.writeln "[Service] #{target}(pid=#{pid}) already exists." 
-            return
+            return if data.failOnError
+            return killByPid ()-> start(callback)
 
-      command = data.command  
+      command = data.command
       # console.log data.command , data.args
 
       if data.shellCommand?
-        shellCommand = data.shellCommand  
+        shellCommand = data.shellCommand
         if process.platform is "win32"
           command = "cmd.exe"
           args = ["/s", "/c", shellCommand.replace(/\//g, "\\") ]
@@ -95,7 +101,7 @@ module.exports = ( grunt ) ->
       else
         args = data.args
 
-      # console.log command, args , opt
+      # console.log command, args , options
       # grunt.log.writelnln command, args, options, arg1
       proc = spawn command, args , options
 
@@ -109,6 +115,8 @@ module.exports = ( grunt ) ->
       if proc.stderr
         proc.stderr.on 'data',  (d)->  log.writeln(d)
 
+      if data.generatePID and data.pidFile
+        fs.writeFile(data.pidFile, proc.pid)
 
       if data.pidFile
         loopUntil ()-> 
