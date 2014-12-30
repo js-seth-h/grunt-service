@@ -173,8 +173,8 @@ And some added option are as follows:
 Default: `false`
 Type: `Boolean`
 
-If false, exit code of command is ignored.
-if true, exit code 0 mean success( continue next task ) otherwise grunt show error and stop
+If false, current `Service Status is ignored`. it means try to start already running service, the task is considerd success. 
+if true, trying to start running service or stop not running service make error, and grunt will stop all tasks.
 
 ### pidFile
 Type: `File path`
@@ -192,15 +192,14 @@ If false, it's assumed that the service is blocking or goes into background and 
 If false, a PID file is generated at provided `pidFile` location for the process.
 
 Note: `pidFile` is a requried attribute if `generatePID` is set to `true`.
+ 
+### blocking 
 
-### async
-
-Default: `true`
+Default: `false`
 Type: `Boolean`
 
-If true, the next task is to continue after the end of the command.
-If false, the next task is to continue without blocking.
-
+If true, Grunt task wait until command done(= process exit).
+If false, Spawn a process for given task and go next task.  
 
 ## License
 

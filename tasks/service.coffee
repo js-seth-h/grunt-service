@@ -26,17 +26,18 @@ loopUntil = (fnEndOk, done)->
 
 module.exports = ( grunt ) ->
 
-  spawn = require('child_process').spawn
+  child_process = require('child_process')
   log = grunt.log 
   grunt.registerMultiTask 'service', 'background service', (arg1 = 'start') ->
     # console.log this
     self = this
     target = @target
     data = @data
+    # data.core = data.core || 'spawn' # or exec
     options = @options
       failOnError : false
       # async : true
-      stdio : 'pipe'
+      stdio : 'pipe' 
 
     done = @async()
 
@@ -56,7 +57,7 @@ module.exports = ( grunt ) ->
       try
         process.kill pid
       catch err
-        log.writeln "[Service] #{target}(pid=#{pid}) already exists." 
+        log.writeln "[Service] #{target}(pid=#{pid}) does not exists." 
         return callback()
 
 
@@ -78,6 +79,14 @@ module.exports = ( grunt ) ->
 
 
     start = (callback)-> 
+
+      _spawned = ()-> callback()
+      _closed = ()-> 
+      if data.blocking
+        _spawned = ()-> 
+        _closed = ()-> callback() 
+
+
       if data.pidFile
         if fs.existsSync data.pidFile
           pid = parseInt(fs.readFileSync data.pidFile)
@@ -101,10 +110,13 @@ module.exports = ( grunt ) ->
       else
         args = data.args
 
-      # console.log command, args , options
-      # grunt.log.writelnln command, args, options, arg1
-      proc = spawn command, args , options
-
+      # # console.log command, args , options
+      # if data.core is 'exec'
+      #   log.writeln 'exec -', command, args, options, arg1
+      #   proc = child_process.exec command + ' ' + args , options
+      # else 
+      log.writeln 'spawn -', command, args, options, arg1
+      proc = child_process.spawn command, args , options
 
       # console.log 'stdout', proc.stdout
  
@@ -114,6 +126,20 @@ module.exports = ( grunt ) ->
         proc.stdout.on 'data',  (d)->  log.writeln(d)
       if proc.stderr
         proc.stderr.on 'data',  (d)->  log.writeln(d)
+        
+      if proc
+        log.writeln "Child PID = #{proc.pid}" 
+        proc.on 'close', (code)->
+          log.writeln 'child process exited with code ', arguments
+          _closed()
+        proc.on 'error', ()->
+          log.writeln 'error', arguments
+        proc.on 'exit', ()->
+          log.writeln 'exit', arguments
+        proc.on 'close', ()->
+          log.writeln 'close', arguments
+        proc.on 'disconnect', ()->
+          log.writeln 'disconnect', arguments
 
       if data.generatePID and data.pidFile
         fs.writeFile(data.pidFile, proc.pid)
@@ -124,9 +150,10 @@ module.exports = ( grunt ) ->
         , ()->
           pid = parseInt(fs.readFileSync data.pidFile) 
           log.writeln "[Service] #{target}(pid=#{pid}) is started." 
-          callback()
+          _spawned()
       else
-        callback()
+        log.writeln "[Service] #{target} is started." 
+        _spawned()
 
 
       # if options.async
