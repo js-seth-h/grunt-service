@@ -1,6 +1,6 @@
 {
   "name": "grunt-service",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "description": "start/stop/restart service( = background process), support pidfile & kill ",
   "keywords": [
     "gruntplugin",

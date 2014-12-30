@@ -199,7 +199,8 @@ Default: `false`
 Type: `Boolean`
 
 If true, Grunt task wait until command done(= process exit).
-If false, Spawn a process for given task and go next task.  
+If false, Spawn a process for given task and go next task.
+  
 
 ## License
 
