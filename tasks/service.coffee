@@ -28,7 +28,7 @@ module.exports = ( grunt ) ->
 
   child_process = require('child_process')
   log = grunt.log 
-  grunt.registerMultiTask 'service', 'background service', (arg1 = 'start') ->
+  grunt.registerMultiTask 'service', 'background service', (arg1 = 'start', arg2) ->
     # console.log this
     self = this
     target = @target
@@ -40,6 +40,9 @@ module.exports = ( grunt ) ->
       stdio : 'pipe' 
 
     done = @async()
+    send = (mesage, callback)->
+      self.proc.send mesage
+      callback null
 
 
     killByPid = (callback)->
@@ -116,6 +119,7 @@ module.exports = ( grunt ) ->
       #   proc = child_process.exec command + ' ' + args , options
       # else 
       log.writeln 'spawn -', command, args, options, arg1
+      self.proc =
       proc = child_process.spawn command, args , options
 
       # console.log 'stdout', proc.stdout
@@ -173,5 +177,8 @@ module.exports = ( grunt ) ->
             done() 
       when "start"    
         start ()->
+          done()  
+      when "send"    
+        send arg2, ()->
           done() 
           
